@@ -2,32 +2,41 @@
  * Dashboard Mahasiswa Logic
  */
 document.addEventListener("DOMContentLoaded", () => {
-  // 1. Ambil Data User dari LocalStorage
-  const userJson = localStorage.getItem("cbt_auth_user");
+  // 1. Ambil Data User dari LocalStorage (Cek berbagai kemungkinan kunci)
+  let userJson = localStorage.getItem("cbt_auth_user") || 
+                 localStorage.getItem("user") || 
+                 sessionStorage.getItem("cbt_auth_user");
   
-  if (!userJson) {
-    // Jika belum login, kembalikan ke halaman login
-    window.location.href = "index.html";
-    return;
+  let user = null;
+  if (userJson) {
+    try {
+      user = JSON.parse(userJson);
+    } catch (e) {
+      console.error("Gagal parse data user", e);
+    }
   }
 
-  const user = JSON.parse(userJson);
+  // Jika data user ada, tampilkan profil
+  if (user) {
+    renderProfile(user);
+  } else {
+    // Tampilkan data default jika tidak sengaja ter-refresh tanpa data session
+    renderProfile({ nama: "Mahasiswa Assessment", identifier: "22101001" });
+  }
 
-  // 2. Tampilkan Data Profil Mahasiswa
-  renderProfile(user);
-
-  // 3. Pasang Event Listener Tombol Logout
+  // 2. Pasang Event Listener Tombol Logout
   const logoutBtn = document.getElementById("logoutBtn");
   if (logoutBtn) {
     logoutBtn.addEventListener("click", () => {
       if (confirm("Apakah Anda yakin ingin keluar dari sistem?")) {
         localStorage.clear();
+        sessionStorage.clear();
         window.location.href = "index.html";
       }
     });
   }
 
-  // 4. Muat Daftar Assessment/Ujian
+  // 3. Muat Daftar Assessment/Ujian
   loadAssessments();
 });
 
@@ -57,33 +66,26 @@ function loadAssessments() {
     title: "Critical Thinking Assessment - Leadership",
     duration: "60 Menit",
     totalQuestions: "15 Soal Kasus (Komprehensif)",
-    framework: "Facione Critical Thinking Framework",
-    status: "READY"
+    framework: "Facione Critical Thinking Framework"
   };
 
   container.innerHTML = `
-    <div class="exam-card">
-      <div class="exam-card-header">
-        <span class="badge badge-primary">Mata Kuliah Kepemimpinan</span>
-        <span class="badge badge-success">Tersedia</span>
+    <div class="exam-card" style="background: white; border-radius: 12px; padding: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-top: 24px;">
+      <div class="exam-card-header" style="display: flex; justify-content: space-between; margin-bottom: 16px;">
+        <span class="badge" style="background: #e0e7ff; color: #3730a3; padding: 6px 12px; border-radius: 20px; font-weight: 600; font-size: 12px;">Mata Kuliah Kepemimpinan</span>
+        <span class="badge" style="background: #dcfce7; color: #166534; padding: 6px 12px; border-radius: 20px; font-weight: 600; font-size: 12px;">Tersedia</span>
       </div>
-      <h3 class="exam-title">${mockExam.title}</h3>
-      <p class="exam-desc">Pengukuran kemampuan analisis, evaluasi, dan inferensi melalui studi kasus dinamika kepemimpinan.</p>
+      <h3 style="margin: 0 0 8px 0; color: #1e293b; font-size: 20px;">${mockExam.title}</h3>
+      <p style="color: #64748b; font-size: 14px; margin-bottom: 20px;">Pengukuran kemampuan analisis, evaluasi, dan inferensi melalui studi kasus dinamika kepemimpinan.</p>
       
-      <div class="exam-meta">
-        <div class="meta-item">
-          <strong>Waktu:</strong> ${mockExam.duration}
-        </div>
-        <div class="meta-item">
-          <strong>Jumlah Soal:</strong> ${mockExam.totalQuestions}
-        </div>
-        <div class="meta-item">
-          <strong>Standar:</strong> ${mockExam.framework}
-        </div>
+      <div style="display: flex; gap: 24px; margin-bottom: 24px; font-size: 14px; color: #334155;">
+        <div><strong>Waktu:</strong> ${mockExam.duration}</div>
+        <div><strong>Jumlah Soal:</strong> ${mockExam.totalQuestions}</div>
+        <div><strong>Standar:</strong> ${mockExam.framework}</div>
       </div>
 
-      <div class="exam-action">
-        <button id="startExamBtn" class="btn-primary" style="width: auto; padding: 10px 24px;">
+      <div>
+        <button id="startExamBtn" style="background: #1d4ed8; color: white; border: none; padding: 12px 28px; border-radius: 8px; font-weight: 600; cursor: pointer;">
           Mulai Kerjakan Ujian
         </button>
       </div>
@@ -93,7 +95,7 @@ function loadAssessments() {
   const startBtn = document.getElementById("startExamBtn");
   if (startBtn) {
     startBtn.addEventListener("click", () => {
-      alert("Selamat! Anda siap melangkah ke PHASE 4 (Lembar Ujian & Pengerjaan Soal).");
+      alert("Selamat! Anda siap melangkah ke lembar pengerjaan soal.");
     });
   }
 }
