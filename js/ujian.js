@@ -30,22 +30,29 @@ function displayUserInfo() {
 
 // Fetch soal dari Google Sheets
 function fetchQuestions() {
-  document.getElementById("questionText").textContent = "Mengambil soal dari server...";
-  
+  const questionTextElem = document.getElementById("questionText");
+  if (questionTextElem) questionTextElem.textContent = "Mengambil soal dari server...";
+
   fetch(`${SCRIPT_URL}?action=getQuestions`)
     .then(res => res.json())
     .then(res => {
-      if (res.status === "success" && res.data.length > 0) {
-        questions = res.data;
+      // Menangani format respons successResponse dari Code.gs
+      const questionData = res.data || (Array.isArray(res) ? res : null);
+      
+      if (questionData && questionData.length > 0) {
+        questions = questionData;
+        currentQuestionIndex = 0;
         loadQuestion();
         startTimer();
       } else {
+        console.warn("Respons server kosong atau format tidak sesuai:", res);
         alert("Gagal memuat soal dari server. Menggunakan soal cadangan.");
         useFallbackQuestions();
       }
     })
     .catch(err => {
       console.error("Error fetching questions:", err);
+      alert("Gagal memuat soal dari server. Menggunakan soal cadangan.");
       useFallbackQuestions();
     });
 }
