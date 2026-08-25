@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - Critical Thinking Assessment UNIMED</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+
+  <div class="login-wrapper">
+    <div class="login-banner">
+      <div class="banner-brand">
+        <img src="assets/logo/logo_unimed.jpg" alt="Logo UNIMED" class="app-logo">
+        <div>
+          <h1 class="institution-name">UNIVERSITAS NEGERI MEDAN</h1>
+          <p class="app-tagline">CBT ASSESSMENT SYSTEM</p>
+        </div>
+      </div>
+      <div class="banner-content">
+        <h2>CRITICAL THINKING ASSESSMENT</h2>
+        <p>Pengukuran Kemampuan Berpikir Kritis Berbasis Framework Facione pada Mata Kuliah Kepemimpinan.</p>
+      </div>
+      <div class="banner-footer">&copy; 2026 Universitas Negeri Medan. All rights reserved.</div>
+    </div>
+
+    <div class="login-form-container">
+      <div class="login-header">
+        <h2>Selamat Datang</h2>
+        <p>Silakan login menggunakan NIM atau Email Anda</p>
+      </div>
+
+      <div id="alertBox" class="alert"></div>
+
+      <form id="loginForm">
+        <div class="form-group">
+          <label for="identifier">NIM / Email</label>
+          <input type="text" id="identifier" class="form-input" placeholder="Masukkan NIM atau Email" required autofocus>
+        </div>
+
+        <div class="form-group">
+          <label for="password">Password</label>
+          <div class="input-wrapper">
+            <input type="password" id="password" class="form-input" placeholder="Masukkan password" required>
+            <button type="button" id="togglePasswordBtn" class="toggle-password">Show</button>
+          </div>
+        </div>
+
+        <button type="submit" id="submitBtn" class="btn-primary">
+          <span id="btnText">MASUK</span>
+          <span id="btnSpinner" class="spinner" style="display: none;"></span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/auth.js"></script>
+  
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      if (Auth.isAuthenticated()) {
+        const user = Auth.getUser();
+        if (user && user.role) Auth.redirectUserByRole(user.role);
+      }
+
+      const loginForm = document.getElementById("loginForm");
+      const identifierInput = document.getElementById("identifier");
+      const passwordInput = document.getElementById("password");
+      const togglePasswordBtn = document.getElementById("togglePasswordBtn");
+      const submitBtn = document.getElementById("submitBtn");
+      const btnText = document.getElementById("btnText");
+      const btnSpinner = document.getElementById("btnSpinner");
+      const alertBox = document.getElementById("alertBox");
+
+      togglePasswordBtn.addEventListener("click", () => {
+        const isPassword = passwordInput.getAttribute("type") === "password";
+        passwordInput.setAttribute("type", isPassword ? "text" : "password");
+        togglePasswordBtn.textContent = isPassword ? "Hide" : "Show";
+      });
+
+      loginForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        alertBox.style.display = "none";
+        
+        setLoading(true);
+        const response = await API.login(identifierInput.value, passwordInput.value);
+
+        if (response.success && response.data) {
+          Auth.saveSession(response.data);
+          Auth.redirectUserByRole(response.data.user.role);
+        } else {
+          setLoading(false);
+          alertBox.textContent = response.message || "Login gagal.";
+          alertBox.style.display = "block";
+        }
+      });
+
+      function setLoading(isLoading) {
+        submitBtn.disabled = isLoading;
+        btnText.textContent = isLoading ? "MEMPROSES..." : "MASUK";
+        btnSpinner.style.display = isLoading ? "inline-block" : "none";
+      }
+    });
+  </script>
+</body>
+</html>
