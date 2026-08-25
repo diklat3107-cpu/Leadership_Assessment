@@ -6,6 +6,9 @@
   <title>Dashboard Mahasiswa - CBT UNIMED</title>
   <link rel="stylesheet" href="./css/style.css">
   <link rel="stylesheet" href="./css/responsive.css">
+  <!-- Chart.js CDN untuk Visualisasi Grafik Dimensi Facione -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
   <style>
     /* Styling Tambahan Khusus Dashboard */
     body {
@@ -89,6 +92,7 @@
       border-radius: var(--radius-lg);
       padding: 24px;
       box-shadow: var(--shadow-sm);
+      margin-bottom: 24px;
     }
     .exam-card-header {
       display: flex;
@@ -126,6 +130,45 @@
       display: flex;
       justify-content: flex-end;
     }
+
+    /* Styling Card Hasil Analisis Facione */
+    .result-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: var(--radius-lg);
+      padding: 28px;
+      margin-bottom: 28px;
+      box-shadow: var(--shadow-sm);
+    }
+    .result-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #f1f5f9;
+      padding-bottom: 16px;
+      margin-bottom: 20px;
+    }
+    .score-box {
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      padding: 12px 24px;
+      border-radius: 12px;
+      text-align: center;
+    }
+    .score-value {
+      font-size: 28px;
+      font-weight: 800;
+      color: #2563eb;
+    }
+    .chart-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      align-items: center;
+    }
+    @media (max-width: 768px) {
+      .chart-grid { grid-template-columns: 1fr; }
+    }
   </style>
 </head>
 <body>
@@ -153,6 +196,34 @@
     <div class="welcome-card">
       <h1>Selamat Datang di Portal Ujian</h1>
       <p>Silakan periksa daftar ujian yang tersedia di bawah ini. Pastikan koneksi internet Anda stabil sebelum memulai ujian.</p>
+    </div>
+
+    <!-- Area Card Analisis & Breakdown Hasil Ujian (Otomatis Tampil Jika Sudah Mengikuti Ujian) -->
+    <div id="resultAnalysisCard" class="result-card" style="display: none;">
+      <div class="result-header">
+        <div>
+          <h3 style="margin: 0 0 4px 0; color: #0f172a; font-size: 18px;">Hasil Analisis Ujian Terakhir</h3>
+          <span style="color: #64748b; font-size: 13px;" id="resultTimestamp">Tanggal Ujian: -</span>
+        </div>
+        <div class="score-box">
+          <div style="font-size: 11px; color: #3b82f6; font-weight: 700; text-transform: uppercase;">Skor Akhir</div>
+          <div id="finalScoreVal" class="score-value">0</div>
+        </div>
+      </div>
+
+      <div class="chart-grid">
+        <!-- Radar Chart Dimensi Facione -->
+        <div style="position: relative; max-width: 400px; margin: 0 auto; width: 100%;">
+          <canvas id="facioneRadarChart"></canvas>
+        </div>
+        <!-- Detail Breakdown Teks -->
+        <div>
+          <h4 style="margin-top: 0; color: #1e293b;">Breakdown Kemampuan Berpikir Kritis (Facione)</h4>
+          <div id="dimensionBreakdownList" style="display: flex; flex-direction: column; gap: 12px; margin-top: 12px;">
+            <!-- Item dimensi dimasukkan via JS -->
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Tempat Daftar Ujian Dimuat -->
