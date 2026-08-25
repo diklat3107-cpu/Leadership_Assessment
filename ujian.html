@@ -4,53 +4,83 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Lembar Ujian - CBT UNIMED</title>
-  <link rel="stylesheet" href="./css/style.css">
-  <link rel="stylesheet" href="./responsive.css">
   <style>
-    body { background-color: #f8fafc; margin: 0; padding: 0; font-family: sans-serif; }
-    .exam-header { background: white; border-bottom: 1px solid #e2e8f0; padding: 16px 32px; display: flex; justify-content: space-between; align-items: center; sticky: top; top: 0; z-index: 100; }
-    .exam-container { max-width: 900px; margin: 32px auto; padding: 0 16px; }
-    .timer-badge { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; padding: 8px 16px; border-radius: 20px; font-weight: bold; font-size: 16px; }
-    .question-card { background: white; border-radius: 12px; padding: 32px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 24px; }
-    .option-item { border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px 18px; margin-bottom: 12px; cursor: pointer; display: flex; align-items: flex-start; gap: 12px; transition: all 0.2s; }
+    * { box-sizing: border-box; }
+    body { background-color: #f1f5f9; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    
+    .exam-header { 
+      background: #ffffff; 
+      border-bottom: 1px solid #e2e8f0; 
+      padding: 16px 40px; 
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center; 
+      box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    }
+    
+    .exam-container { max-width: 850px; margin: 32px auto; padding: 0 20px; }
+    
+    .timer-badge { 
+      background: #fef2f2; 
+      color: #dc2626; 
+      border: 1px solid #fecaca; 
+      padding: 10px 20px; 
+      border-radius: 30px; 
+      font-weight: 700; 
+      font-size: 16px; 
+    }
+    
+    .question-card { background: #ffffff; border-radius: 12px; padding: 32px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+    
+    .option-item { 
+      border: 1px solid #cbd5e1; 
+      border-radius: 8px; 
+      padding: 14px 18px; 
+      margin-bottom: 12px; 
+      cursor: pointer; 
+      display: flex; 
+      align-items: flex-start; 
+      gap: 12px; 
+      transition: background 0.2s, border-color 0.2s; 
+    }
     .option-item:hover { border-color: #2563eb; background: #eff6ff; }
-    .option-item input { margin-top: 3px; }
-    .nav-buttons { display: flex; justify-content: space-between; margin-top: 24px; }
-    .btn { padding: 10px 24px; border-radius: 6px; font-weight: 600; border: none; cursor: pointer; }
-    .btn-secondary { background: #e2e8f0; color: #475569; }
-    .btn-primary { background: #2563eb; color: white; }
-    .btn-success { background: #16a34a; color: white; }
+    .option-item input { margin-top: 3px; cursor: pointer; }
+    
+    .nav-buttons { display: flex; justify-content: space-between; margin-top: 28px; gap: 16px; }
+    .btn { padding: 12px 28px; border-radius: 8px; font-weight: 600; border: none; cursor: pointer; font-size: 15px; }
+    .btn-secondary { background: #cbd5e1; color: #334155; }
+    .btn-secondary:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-primary { background: #2563eb; color: #ffffff; flex-grow: 1; }
+    .btn-success { background: #16a34a; color: #ffffff; flex-grow: 1; }
   </style>
 </head>
 <body>
 
   <div class="exam-header">
     <div>
-      <h3 style="margin: 0; color: #1e293b;">Critical Thinking Assessment - Leadership</h3>
-      <small color="#64748b" id="studentInfo">Mahasiswa: Loading...</small>
+      <h3 style="margin: 0 0 4px 0; color: #0f172a; font-size: 18px;">Critical Thinking Assessment - Leadership</h3>
+      <span style="color: #64748b; font-size: 14px;" id="studentInfo">Mahasiswa: Loading...</span>
     </div>
     <div class="timer-badge" id="timer">Sisa Waktu: 60:00</div>
   </div>
 
   <div class="exam-container">
-    <div class="question-card" id="questionCard">
-      <h4 style="color: #64748b; margin-top: 0;" id="questionNum">Soal 1 dari 15</h4>
-      <p style="font-size: 16px; line-height: 1.6; color: #1e293b; font-weight: 500;" id="questionText">Memuat soal...</p>
+    <div class="question-card">
+      <h4 style="color: #2563eb; margin-top: 0; font-size: 15px;" id="questionNum">Soal 1 dari 15</h4>
+      <p style="font-size: 16px; line-height: 1.6; color: #1e293b; font-weight: 500; margin-bottom: 24px;" id="questionText">Memuat soal...</p>
       
-      <div id="optionsContainer" style="margin-top: 20px;">
-        <!-- Pilihan jawaban akan dimuat secara dinamis -->
+      <div id="optionsContainer">
+        <!-- Pilihan jawaban -->
       </div>
 
       <div class="nav-buttons">
         <button id="prevBtn" class="btn btn-secondary" onclick="prevQuestion()" disabled>Sebelumnya</button>
         <button id="nextBtn" class="btn btn-primary" onclick="nextQuestion()">Selanjutnya</button>
-        <button id="submitBtn" class="btn btn-success" onclick="finishExam()" style="display: none;">Selesai & Kirim</button>
+        <button id="submitBtn" class="btn btn-success" onclick="finishExam()" style="display: none;">Selesai & Kirim Jawaban</button>
       </div>
     </div>
   </div>
 
-  <script src="./js/config.js"></script>
-  <script src="./js/api.js"></script>
   <script src="./js/ujian.js"></script>
 </body>
 </html>
