@@ -1,10 +1,17 @@
 /**
  * Dashboard Mahasiswa Logic
  */
-document.addEventListener("DOMContentLoaded", async () => {
-  // 1. Proteksi Halaman: Hanya Role 'MAHASISWA' yang Boleh Masuk
-  const user = await Auth.protectPage(["MAHASISWA"]);
-  if (!user) return; 
+document.addEventListener("DOMContentLoaded", () => {
+  // 1. Ambil Data User dari LocalStorage
+  const userJson = localStorage.getItem("cbt_auth_user");
+  
+  if (!userJson) {
+    // Jika belum login, kembalikan ke halaman login
+    window.location.href = "index.html";
+    return;
+  }
+
+  const user = JSON.parse(userJson);
 
   // 2. Tampilkan Data Profil Mahasiswa
   renderProfile(user);
@@ -14,7 +21,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (logoutBtn) {
     logoutBtn.addEventListener("click", () => {
       if (confirm("Apakah Anda yakin ingin keluar dari sistem?")) {
-        Auth.logout();
+        localStorage.clear();
+        window.location.href = "index.html";
       }
     });
   }
@@ -30,7 +38,6 @@ function renderProfile(user) {
   const userNameElem = document.getElementById("userName");
   const userNimElem = document.getElementById("userNim");
 
-  // Membaca property nama dan identifier/nim dengan lebih fleksibel
   const name = user.nama || user.name || "Mahasiswa";
   const nim = user.identifier || user.nim || user.email || "-";
 
@@ -41,11 +48,10 @@ function renderProfile(user) {
 /**
  * Memuat Daftar Ujian
  */
-async function loadAssessments() {
+function loadAssessments() {
   const container = document.getElementById("assessmentList");
   if (!container) return;
 
-  // Data Ujian Berpikir Kritis Facione
   const mockExam = {
     id: "EXAM_FACIONE_01",
     title: "Critical Thinking Assessment - Leadership",
@@ -55,7 +61,6 @@ async function loadAssessments() {
     status: "READY"
   };
 
-  // Render Card Ujian ke Halaman
   container.innerHTML = `
     <div class="exam-card">
       <div class="exam-card-header">
@@ -85,7 +90,6 @@ async function loadAssessments() {
     </div>
   `;
 
-  // Listener Tombol Mulai Ujian
   const startBtn = document.getElementById("startExamBtn");
   if (startBtn) {
     startBtn.addEventListener("click", () => {
