@@ -1,6 +1,6 @@
 const CONFIG = {
   // Ganti URL di bawah ini dengan URL Web App Google Apps Script Anda
-  API_URL: "https://script.google.com/macros/s/AKfycbx_Ganti_Dengan_Deployment_ID_Anda/exec",
+  API_URL: "https://script.google.com/macros/s/AKfycbxs-5HAAB20TqkVoDJu1y-en3LLCHJrI0BsFMrN1xS_i4AU3HdLh2kGeudJ0rnD_t68gQ/exec",
   
   STORAGE_KEYS: {
     TOKEN: "cbt_auth_token",
