@@ -2,10 +2,10 @@
  * Dashboard Mahasiswa Logic
  */
 document.addEventListener("DOMContentLoaded", () => {
-  // 1. Ambil Data User dari LocalStorage (Cek berbagai kemungkinan kunci)
-  let userJson = localStorage.getItem("cbt_auth_user") || 
-                 localStorage.getItem("user") || 
-                 sessionStorage.getItem("cbt_auth_user");
+  // 1. Ambil Data User dari LocalStorage
+  const userJson = localStorage.getItem("cbt_auth_user") || 
+                   localStorage.getItem("user") || 
+                   sessionStorage.getItem("cbt_auth_user");
   
   let user = null;
   if (userJson) {
@@ -16,15 +16,14 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Jika data user ada, tampilkan profil
+  // Tampilkan profil pengguna
   if (user) {
     renderProfile(user);
   } else {
-    // Tampilkan data default jika tidak sengaja ter-refresh tanpa data session
     renderProfile({ nama: "Mahasiswa Assessment", identifier: "22101001" });
   }
 
-  // 2. Pasang Event Listener Tombol Logout
+  // 2. Event Listener Tombol Logout
   const logoutBtn = document.getElementById("logoutBtn");
   if (logoutBtn) {
     logoutBtn.addEventListener("click", () => {
@@ -36,7 +35,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // 3. Muat Daftar Assessment/Ujian
+  // 3. Muat Daftar Ujian
   loadAssessments();
 });
 
@@ -98,3 +97,4 @@ function loadAssessments() {
       window.location.href = "ujian.html";
     });
   }
+}
