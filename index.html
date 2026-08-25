@@ -4,45 +4,67 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Login - Critical Thinking Assessment UNIMED</title>
-  <link rel="stylesheet" href="css/style.css">
-  <link rel="stylesheet" href="css/responsive.css">
+  <!-- Menghubungkan CSS (Gunakan ./ agar terbaca dari root) -->
+  <link rel="stylesheet" href="./css/style.css">
+  <link rel="stylesheet" href="./css/responsive.css">
 </head>
 <body>
 
   <div class="login-wrapper">
+    <!-- Panel Kiri: Branding & Logo UNIMED -->
     <div class="login-banner">
       <div class="banner-brand">
-        <img src="assets/logo/logo_unimed.jpg" alt="Logo UNIMED" class="app-logo">
+        <!-- Logo UNIMED -->
+        <img src="./assets/logo/logo_unimed.jpg" alt="Logo UNIMED" class="app-logo">
         <div>
           <h1 class="institution-name">UNIVERSITAS NEGERI MEDAN</h1>
           <p class="app-tagline">CBT ASSESSMENT SYSTEM</p>
         </div>
       </div>
+
       <div class="banner-content">
         <h2>CRITICAL THINKING ASSESSMENT</h2>
         <p>Pengukuran Kemampuan Berpikir Kritis Berbasis Framework Facione pada Mata Kuliah Kepemimpinan.</p>
       </div>
-      <div class="banner-footer">&copy; 2026 Universitas Negeri Medan. All rights reserved.</div>
+
+      <div class="banner-footer">
+        &copy; 2026 Universitas Negeri Medan. All rights reserved.
+      </div>
     </div>
 
+    <!-- Panel Kanan: Form Login -->
     <div class="login-form-container">
       <div class="login-header">
         <h2>Selamat Datang</h2>
         <p>Silakan login menggunakan NIM atau Email Anda</p>
       </div>
 
-      <div id="alertBox" class="alert"></div>
+      <!-- Alert Pesan Error -->
+      <div id="alertBox" class="alert alert-danger" role="alert"></div>
 
-      <form id="loginForm">
+      <form id="loginForm" autocomplete="off">
         <div class="form-group">
           <label for="identifier">NIM / Email</label>
-          <input type="text" id="identifier" class="form-input" placeholder="Masukkan NIM atau Email" required autofocus>
+          <input 
+            type="text" 
+            id="identifier" 
+            class="form-input" 
+            placeholder="Masukkan NIM atau Email" 
+            required 
+            autofocus
+          >
         </div>
 
         <div class="form-group">
           <label for="password">Password</label>
           <div class="input-wrapper">
-            <input type="password" id="password" class="form-input" placeholder="Masukkan password" required>
+            <input 
+              type="password" 
+              id="password" 
+              class="form-input" 
+              placeholder="Masukkan password" 
+              required
+            >
             <button type="button" id="togglePasswordBtn" class="toggle-password">Show</button>
           </div>
         </div>
@@ -55,15 +77,19 @@
     </div>
   </div>
 
-  <script src="js/config.js"></script>
-  <script src="js/api.js"></script>
-  <script src="js/auth.js"></script>
+  <!-- JavaScript Modules -->
+  <script src="./js/config.js"></script>
+  <script src="./js/api.js"></script>
+  <script src="./js/auth.js"></script>
   
   <script>
     document.addEventListener("DOMContentLoaded", () => {
-      if (Auth.isAuthenticated()) {
+      if (typeof Auth !== "undefined" && Auth.isAuthenticated()) {
         const user = Auth.getUser();
-        if (user && user.role) Auth.redirectUserByRole(user.role);
+        if (user && user.role) {
+          Auth.redirectUserByRole(user.role);
+          return;
+        }
       }
 
       const loginForm = document.getElementById("loginForm");
@@ -83,25 +109,46 @@
 
       loginForm.addEventListener("submit", async (e) => {
         e.preventDefault();
-        alertBox.style.display = "none";
         
+        alertBox.style.display = "none";
+        alertBox.textContent = "";
+
+        const identifier = identifierInput.value.trim();
+        const password = passwordInput.value;
+
+        if (!identifier || !password) {
+          showAlert("NIM/Email dan Password wajib diisi.");
+          return;
+        }
+
         setLoading(true);
-        const response = await API.login(identifierInput.value, passwordInput.value);
+
+        const response = await API.login(identifier, password);
 
         if (response.success && response.data) {
           Auth.saveSession(response.data);
           Auth.redirectUserByRole(response.data.user.role);
         } else {
           setLoading(false);
-          alertBox.textContent = response.message || "Login gagal.";
-          alertBox.style.display = "block";
+          showAlert(response.message || "Email/NIM atau password salah.");
         }
       });
 
+      function showAlert(message) {
+        alertBox.textContent = message;
+        alertBox.style.display = "block";
+      }
+
       function setLoading(isLoading) {
-        submitBtn.disabled = isLoading;
-        btnText.textContent = isLoading ? "MEMPROSES..." : "MASUK";
-        btnSpinner.style.display = isLoading ? "inline-block" : "none";
+        if (isLoading) {
+          submitBtn.disabled = true;
+          btnText.textContent = "MEMPROSES...";
+          btnSpinner.style.display = "inline-block";
+        } else {
+          submitBtn.disabled = false;
+          btnText.textContent = "MASUK";
+          btnSpinner.style.display = "none";
+        }
       }
     });
   </script>
