@@ -1,9 +1,8 @@
 let currentQuestionIndex = 0;
 let userAnswers = {};
 let timerInterval;
-let timeLeft = 3600; // 60 menit dalam detik
+let timeLeft = 3600;
 
-// Data Soal Simulasi Berpikir Kritis (Facione Framework)
 const questions = [
   {
     id: 1,
@@ -28,10 +27,7 @@ const questions = [
 ];
 
 document.addEventListener("DOMContentLoaded", () => {
-  // 1. Tampilkan Profil Mahasiswa Login
   displayUserInfo();
-
-  // 2. Load Soal & Timer
   loadQuestion();
   startTimer();
 });
@@ -46,11 +42,7 @@ function displayUserInfo() {
   
   let user = null;
   if (rawUser) {
-    try {
-      user = JSON.parse(rawUser);
-    } catch (e) {
-      console.error("Gagal parse user data:", e);
-    }
+    try { user = JSON.parse(rawUser); } catch (e) {}
   }
 
   const nama = (user && (user.nama || user.name)) ? (user.nama || user.name) : "Andi Saputra";
@@ -61,71 +53,41 @@ function displayUserInfo() {
 
 function loadQuestion() {
   const q = questions[currentQuestionIndex];
-  const questionNum = document.getElementById("questionNum");
-  const questionText = document.getElementById("questionText");
+  document.getElementById("questionNum").textContent = `Soal ${currentQuestionIndex + 1} dari ${questions.length}`;
+  document.getElementById("questionText").textContent = q.text;
+
   const container = document.getElementById("optionsContainer");
+  container.innerHTML = "";
+  q.options.forEach(opt => {
+    const isChecked = userAnswers[q.id] === opt.id ? "checked" : "";
+    container.innerHTML += `
+      <label class="option-item">
+        <input type="radio" name="answer" value="${opt.id}" ${isChecked} onchange="saveAnswer(${q.id}, '${opt.id}')">
+        <div><strong>${opt.id}.</strong> ${opt.text}</div>
+      </label>
+    `;
+  });
 
-  if (questionNum) questionNum.textContent = `Soal ${currentQuestionIndex + 1} dari ${questions.length}`;
-  if (questionText) questionText.textContent = q.text;
-
-  if (container) {
-    container.innerHTML = "";
-    q.options.forEach(opt => {
-      const isChecked = userAnswers[q.id] === opt.id ? "checked" : "";
-      container.innerHTML += `
-        <label class="option-item">
-          <input type="radio" name="answer" value="${opt.id}" ${isChecked} onchange="saveAnswer(${q.id}, '${opt.id}')">
-          <div><strong>${opt.id}.</strong> ${opt.text}</div>
-        </label>
-      `;
-    });
-  }
-
-  // Atur Navigasi Tombol
-  const prevBtn = document.getElementById("prevBtn");
-  const nextBtn = document.getElementById("nextBtn");
-  const submitBtn = document.getElementById("submitBtn");
-
-  if (prevBtn) prevBtn.disabled = currentQuestionIndex === 0;
-  
+  document.getElementById("prevBtn").disabled = currentQuestionIndex === 0;
   if (currentQuestionIndex === questions.length - 1) {
-    if (nextBtn) nextBtn.style.display = "none";
-    if (submitBtn) submitBtn.style.display = "block";
+    document.getElementById("nextBtn").style.display = "none";
+    document.getElementById("submitBtn").style.display = "block";
   } else {
-    if (nextBtn) nextBtn.style.display = "block";
-    if (submitBtn) submitBtn.style.display = "none";
+    document.getElementById("nextBtn").style.display = "block";
+    document.getElementById("submitBtn").style.display = "none";
   }
 }
 
-function saveAnswer(questionId, optionId) {
-  userAnswers[questionId] = optionId;
-}
-
-function nextQuestion() {
-  if (currentQuestionIndex < questions.length - 1) {
-    currentQuestionIndex++;
-    loadQuestion();
-  }
-}
-
-function prevQuestion() {
-  if (currentQuestionIndex > 0) {
-    currentQuestionIndex--;
-    loadQuestion();
-  }
-}
+function saveAnswer(questionId, optionId) { userAnswers[questionId] = optionId; }
+function nextQuestion() { if (currentQuestionIndex < questions.length - 1) { currentQuestionIndex++; loadQuestion(); } }
+function prevQuestion() { if (currentQuestionIndex > 0) { currentQuestionIndex--; loadQuestion(); } }
 
 function startTimer() {
-  const timerElem = document.getElementById("timer");
   timerInterval = setInterval(() => {
     timeLeft--;
     const minutes = Math.floor(timeLeft / 60);
     const seconds = timeLeft % 60;
-    
-    if (timerElem) {
-      timerElem.textContent = `Sisa Waktu: ${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
-    }
-
+    document.getElementById("timer").textContent = `Sisa Waktu: ${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
     if (timeLeft <= 0) {
       clearInterval(timerInterval);
       alert("Waktu ujian telah habis!");
