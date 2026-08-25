@@ -1,5 +1,5 @@
 // Ganti URL ini dengan URL Web App Google Apps Script Anda
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx.../exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxs-5HAAB20TqkVoDJu1y-en3LLCHJrI0BsFMrN1xS_i4AU3HdLh2kGeudJ0rnD_t68gQ/exec";
 
 let questions = [];
 let currentQuestionIndex = 0;
