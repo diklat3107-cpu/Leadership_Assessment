@@ -32,6 +32,36 @@
     
     .question-card { background: #ffffff; border-radius: 12px; padding: 32px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
     
+    /* Container untuk Nomor Soal dan Badge Dimensi Facione */
+    .question-header-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    .question-num {
+      color: #2563eb;
+      margin: 0;
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    /* Styling Badge Dimensi Facione */
+    .facione-badge {
+      background-color: #e0e7ff;
+      color: #3730a3;
+      border: 1px solid #c7d2fe;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      display: inline-block;
+    }
+    
     .option-item { 
       border: 1px solid #cbd5e1; 
       border-radius: 8px; 
@@ -66,7 +96,12 @@
 
   <div class="exam-container">
     <div class="question-card">
-      <h4 style="color: #2563eb; margin-top: 0; font-size: 15px;" id="questionNum">Soal 1 dari 15</h4>
+      <!-- Area Header Soal (Nomor Soal + Badge Dimensi Facione) -->
+      <div class="question-header-row">
+        <h4 class="question-num" id="questionNum">Soal 1 dari 15</h4>
+        <span class="facione-badge" id="facioneDimension" style="display: none;"></span>
+      </div>
+
       <p style="font-size: 16px; line-height: 1.6; color: #1e293b; font-weight: 500; margin-bottom: 24px;" id="questionText">Memuat soal...</p>
       
       <div id="optionsContainer">
