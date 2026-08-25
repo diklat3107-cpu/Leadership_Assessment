@@ -144,26 +144,54 @@ function finishExam() {
 
   clearInterval(timerInterval);
   
-  // Hitung Skor
+  // 1. Hitung Skor Total & Breakdown Dimensi Facione
   let score = 0;
+  const dimensionStats = {};
+
   questions.forEach(q => {
+    const dim = (q.facione_dimension || "UNSPECIFIED").toUpperCase().trim();
+    if (!dimensionStats[dim]) {
+      dimensionStats[dim] = { total: 0, correct: 0, percentage: 0 };
+    }
+    dimensionStats[dim].total += 1;
+
     if (userAnswers[q.id] && userAnswers[q.id] === q.key) {
       score += (100 / questions.length);
+      dimensionStats[dim].correct += 1;
     }
+  });
+
+  // Hitung persentase per dimensi
+  Object.keys(dimensionStats).forEach(dim => {
+    const stat = dimensionStats[dim];
+    stat.percentage = Math.round((stat.correct / stat.total) * 100);
   });
 
   const rawUser = localStorage.getItem("cbt_auth_user") || sessionStorage.getItem("cbt_auth_user");
   let user = { nama: "Andi Saputra", nim: "22101001" };
   if (rawUser) { try { user = JSON.parse(rawUser); } catch(e){} }
 
+  const finalScore = Math.round(score);
+
   const payload = {
     action: "submitExam",
     student: user,
-    score: Math.round(score),
+    score: finalScore,
     totalQuestions: questions.length,
-    answers: userAnswers
+    answers: userAnswers,
+    questions: questions
   };
 
+  // 2. Simpan hasil ujian ke sessionStorage untuk dibaca di halaman Mahasiswa
+  const resultStorageData = {
+    score: finalScore,
+    totalQuestions: questions.length,
+    dimensionStats: dimensionStats,
+    timestamp: new Date().toISOString()
+  };
+  sessionStorage.setItem("last_exam_result", JSON.stringify(resultStorageData));
+
+  // 3. Kirim data ke backend Google Apps Script
   fetch(SCRIPT_URL, {
     method: "POST",
     mode: "no-cors",
@@ -173,12 +201,12 @@ function finishExam() {
     body: JSON.stringify(payload)
   })
   .then(() => {
-    alert(`Ujian Selesai! Skor Anda: ${Math.round(score)}\nData berhasil dikirim ke server.`);
+    alert(`Ujian Selesai!\nSkor Anda: ${finalScore}\nData berhasil dikirim ke server.`);
     window.location.href = "mahasiswa.html";
   })
   .catch(err => {
     console.error("Error submitting exam:", err);
-    alert(`Ujian Selesai! Skor Anda: ${Math.round(score)} (Gagal simpan ke server)`);
+    alert(`Ujian Selesai!\nSkor Anda: ${finalScore} (Gagal simpan ke server)`);
     window.location.href = "mahasiswa.html";
   });
 }
