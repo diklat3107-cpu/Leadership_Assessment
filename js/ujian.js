@@ -61,6 +61,7 @@ function useFallbackQuestions() {
   questions = [
     {
       id: 1,
+      facione_dimension: "ANALYSIS",
       text: "Sebuah tim proyek mengalami penurunan kinerja setelah terjadi konflik antaranggota tim. Langkah pertama yang berbasis analisis masalah secara kritis adalah...",
       options: [
         { id: "A", text: "Langsung mengganti anggota tim yang paling sering memicu perdebatan." },
@@ -79,16 +80,32 @@ function loadQuestion() {
   if (questions.length === 0) return;
 
   const q = questions[currentQuestionIndex];
+  
+  // Set Nomor Soal
   document.getElementById("questionNum").textContent = `Soal ${currentQuestionIndex + 1} dari ${questions.length}`;
+
+  // Set & Tampilkan Badge Dimensi Facione
+  const dimensionElem = document.getElementById("facioneDimension");
+  if (dimensionElem) {
+    if (q.facione_dimension) {
+      dimensionElem.textContent = `Dimensi: ${q.facione_dimension}`;
+      dimensionElem.style.display = "inline-block";
+    } else {
+      dimensionElem.style.display = "none";
+    }
+  }
+
+  // Set Teks Soal
   document.getElementById("questionText").textContent = q.text;
 
+  // Render Pilihan Jawaban
   const container = document.getElementById("optionsContainer");
   container.innerHTML = "";
   q.options.forEach(opt => {
     const isChecked = userAnswers[q.id] === opt.id ? "checked" : "";
     container.innerHTML += `
       <label class="option-item">
-        <input type="radio" name="answer" value="${opt.id}" ${isChecked} onchange="saveAnswer(${q.id}, '${opt.id}')">
+        <input type="radio" name="answer" value="${opt.id}" ${isChecked} onchange="saveAnswer('${q.id}', '${opt.id}')">
         <div><strong>${opt.id}.</strong> ${opt.text}</div>
       </label>
     `;
@@ -147,7 +164,6 @@ function finishExam() {
     answers: userAnswers
   };
 
-  // Kirim data dengan format URLSearchParams (Menghindari CORS Error pada Apps Script)
   fetch(SCRIPT_URL, {
     method: "POST",
     mode: "no-cors",
