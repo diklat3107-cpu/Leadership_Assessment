@@ -129,7 +129,7 @@ function finishExam() {
   });
 
   const rawUser = localStorage.getItem("cbt_auth_user") || sessionStorage.getItem("cbt_auth_user");
-  let user = { nama: "Mahasiswa", nim: "000" };
+  let user = { nama: "Andi Saputra", nim: "22101001" };
   if (rawUser) { try { user = JSON.parse(rawUser); } catch(e){} }
 
   const payload = {
@@ -140,13 +140,17 @@ function finishExam() {
     answers: userAnswers
   };
 
-  // Kirim Hasil ke Google Sheets
+  // Kirim data dengan format URLSearchParams (Menghindari CORS Error pada Apps Script)
   fetch(SCRIPT_URL, {
     method: "POST",
+    mode: "no-cors",
+    headers: {
+      "Content-Type": "text/plain;charset=utf-8",
+    },
     body: JSON.stringify(payload)
   })
   .then(() => {
-    alert(`Ujian Selesai! Skor Anda: ${Math.round(score)}`);
+    alert(`Ujian Selesai! Skor Anda: ${Math.round(score)}\nData berhasil dikirim ke server.`);
     window.location.href = "mahasiswa.html";
   })
   .catch(err => {
