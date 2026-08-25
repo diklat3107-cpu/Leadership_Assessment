@@ -95,7 +95,6 @@ function loadAssessments() {
   const startBtn = document.getElementById("startExamBtn");
   if (startBtn) {
     startBtn.addEventListener("click", () => {
-      alert("Selamat! Anda siap melangkah ke lembar pengerjaan soal.");
+      window.location.href = "ujian.html";
     });
   }
-}
