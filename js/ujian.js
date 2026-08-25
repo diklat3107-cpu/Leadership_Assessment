@@ -1,57 +1,76 @@
+// Ganti URL ini dengan URL Web App Google Apps Script Anda
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx.../exec";
+
+let questions = [];
 let currentQuestionIndex = 0;
 let userAnswers = {};
 let timerInterval;
 let timeLeft = 3600;
 
-const questions = [
-  {
-    id: 1,
-    text: "Sebuah tim proyek mengalami penurunan kinerja setelah terjadi konflik antaranggota tim. Sebagai ketua tim, langkah pertama yang berbasis analisis masalah secara kritis adalah...",
-    options: [
-      { id: "A", text: "Langsung mengganti anggota tim yang paling sering memicu perdebatan." },
-      { id: "B", text: "Mengumpulkan bukti/data objektif terkait akar konflik dan dampaknya terhadap capaian tugas." },
-      { id: "C", text: "Melaporkan langsung masalah ini kepada dosen pengampu tanpa dialog internal." },
-      { id: "D", text: "Abaikan konflik dan fokus menyelesaikan sisa pekerjaan secara individu." }
-    ]
-  },
-  {
-    id: 2,
-    text: "Dalam mengevaluasi data hasil survei kepuasan organisasi, Anda menemukan data yang saling bertolak belakang antara kelompok senior dan junior. Sikap inferensi kritis Anda adalah...",
-    options: [
-      { id: "A", text: "Membuang data kelompok junior karena kurang berpengalaman." },
-      { id: "B", text: "Memilih data yang mendukung hipotesis awal Anda saja." },
-      { id: "C", text: "Menganalisis pola perbedaan persepsi antara kedua kelompok secara objektif sebelum menarik kesimpulan." },
-      { id: "D", text: "Mengambil rata-rata matematis tanpa mempertimbangkan konteks kualitatif." }
-    ]
-  }
-];
-
 document.addEventListener("DOMContentLoaded", () => {
   displayUserInfo();
-  loadQuestion();
-  startTimer();
+  fetchQuestions();
 });
 
 function displayUserInfo() {
   const studentElem = document.getElementById("studentInfo");
   if (!studentElem) return;
 
-  const rawUser = localStorage.getItem("cbt_auth_user") || 
-                  localStorage.getItem("user") || 
-                  sessionStorage.getItem("cbt_auth_user");
-  
+  const rawUser = localStorage.getItem("cbt_auth_user") || sessionStorage.getItem("cbt_auth_user");
   let user = null;
   if (rawUser) {
     try { user = JSON.parse(rawUser); } catch (e) {}
   }
 
-  const nama = (user && (user.nama || user.name)) ? (user.nama || user.name) : "Andi Saputra";
-  const nim = (user && (user.identifier || user.nim)) ? (user.identifier || user.nim) : "22101001";
+  const nama = (user && (user.nama || user.name)) ? (user.nama || user.name) : "Mahasiswa";
+  const nim = (user && (user.identifier || user.nim)) ? (user.identifier || user.nim) : "NIM";
 
   studentElem.textContent = `Mahasiswa: ${nama} (${nim})`;
 }
 
+// Fetch soal dari Google Sheets
+function fetchQuestions() {
+  document.getElementById("questionText").textContent = "Mengambil soal dari server...";
+  
+  fetch(`${SCRIPT_URL}?action=getQuestions`)
+    .then(res => res.json())
+    .then(res => {
+      if (res.status === "success" && res.data.length > 0) {
+        questions = res.data;
+        loadQuestion();
+        startTimer();
+      } else {
+        alert("Gagal memuat soal dari server. Menggunakan soal cadangan.");
+        useFallbackQuestions();
+      }
+    })
+    .catch(err => {
+      console.error("Error fetching questions:", err);
+      useFallbackQuestions();
+    });
+}
+
+function useFallbackQuestions() {
+  questions = [
+    {
+      id: 1,
+      text: "Sebuah tim proyek mengalami penurunan kinerja setelah terjadi konflik antaranggota tim. Langkah pertama yang berbasis analisis masalah secara kritis adalah...",
+      options: [
+        { id: "A", text: "Langsung mengganti anggota tim yang paling sering memicu perdebatan." },
+        { id: "B", text: "Mengumpulkan bukti/data objektif terkait akar konflik dan dampaknya terhadap capaian tugas." },
+        { id: "C", text: "Melaporkan langsung masalah ini kepada dosen pengampu tanpa dialog internal." },
+        { id: "D", text: "Abaikan konflik dan fokus menyelesaikan sisa pekerjaan secara individu." }
+      ],
+      key: "B"
+    }
+  ];
+  loadQuestion();
+  startTimer();
+}
+
 function loadQuestion() {
+  if (questions.length === 0) return;
+
   const q = questions[currentQuestionIndex];
   document.getElementById("questionNum").textContent = `Soal ${currentQuestionIndex + 1} dari ${questions.length}`;
   document.getElementById("questionText").textContent = q.text;
@@ -97,9 +116,42 @@ function startTimer() {
 }
 
 function finishExam() {
-  if (confirm("Apakah Anda yakin ingin menyelesaikan ujian?")) {
-    clearInterval(timerInterval);
-    alert("Ujian Selesai! Jawaban Anda telah tersimpan.");
+  if (!confirm("Apakah Anda yakin ingin menyelesaikan ujian?")) return;
+
+  clearInterval(timerInterval);
+  
+  // Hitung Skor
+  let score = 0;
+  questions.forEach(q => {
+    if (userAnswers[q.id] && userAnswers[q.id] === q.key) {
+      score += (100 / questions.length);
+    }
+  });
+
+  const rawUser = localStorage.getItem("cbt_auth_user") || sessionStorage.getItem("cbt_auth_user");
+  let user = { nama: "Mahasiswa", nim: "000" };
+  if (rawUser) { try { user = JSON.parse(rawUser); } catch(e){} }
+
+  const payload = {
+    action: "submitExam",
+    student: user,
+    score: Math.round(score),
+    totalQuestions: questions.length,
+    answers: userAnswers
+  };
+
+  // Kirim Hasil ke Google Sheets
+  fetch(SCRIPT_URL, {
+    method: "POST",
+    body: JSON.stringify(payload)
+  })
+  .then(() => {
+    alert(`Ujian Selesai! Skor Anda: ${Math.round(score)}`);
     window.location.href = "mahasiswa.html";
-  }
+  })
+  .catch(err => {
+    console.error("Error submitting exam:", err);
+    alert(`Ujian Selesai! Skor Anda: ${Math.round(score)} (Gagal simpan ke server)`);
+    window.location.href = "mahasiswa.html";
+  });
 }
