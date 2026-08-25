@@ -28,42 +28,72 @@ const questions = [
 ];
 
 document.addEventListener("DOMContentLoaded", () => {
-  const userJson = localStorage.getItem("cbt_auth_user");
-  if (userJson) {
-    const user = JSON.parse(userJson);
-    document.getElementById("studentInfo").textContent = `${user.nama || "Mahasiswa"} (${user.identifier || user.nim || "-"})`;
-  }
+  // 1. Tampilkan Profil Mahasiswa Login
+  displayUserInfo();
 
+  // 2. Load Soal & Timer
   loadQuestion();
   startTimer();
 });
 
+function displayUserInfo() {
+  const studentElem = document.getElementById("studentInfo");
+  if (!studentElem) return;
+
+  const rawUser = localStorage.getItem("cbt_auth_user") || 
+                  localStorage.getItem("user") || 
+                  sessionStorage.getItem("cbt_auth_user");
+  
+  let user = null;
+  if (rawUser) {
+    try {
+      user = JSON.parse(rawUser);
+    } catch (e) {
+      console.error("Gagal parse user data:", e);
+    }
+  }
+
+  const nama = (user && (user.nama || user.name)) ? (user.nama || user.name) : "Andi Saputra";
+  const nim = (user && (user.identifier || user.nim)) ? (user.identifier || user.nim) : "22101001";
+
+  studentElem.textContent = `Mahasiswa: ${nama} (${nim})`;
+}
+
 function loadQuestion() {
   const q = questions[currentQuestionIndex];
-  document.getElementById("questionNum").textContent = `Soal ${currentQuestionIndex + 1} dari ${questions.length}`;
-  document.getElementById("questionText").textContent = q.text;
-
+  const questionNum = document.getElementById("questionNum");
+  const questionText = document.getElementById("questionText");
   const container = document.getElementById("optionsContainer");
-  container.innerHTML = "";
 
-  q.options.forEach(opt => {
-    const isChecked = userAnswers[q.id] === opt.id ? "checked" : "";
-    container.innerHTML += `
-      <label class="option-item">
-        <input type="radio" name="answer" value="${opt.id}" ${isChecked} onchange="saveAnswer(${q.id}, '${opt.id}')">
-        <div><strong>${opt.id}.</strong> ${opt.text}</div>
-      </label>
-    `;
-  });
+  if (questionNum) questionNum.textContent = `Soal ${currentQuestionIndex + 1} dari ${questions.length}`;
+  if (questionText) questionText.textContent = q.text;
+
+  if (container) {
+    container.innerHTML = "";
+    q.options.forEach(opt => {
+      const isChecked = userAnswers[q.id] === opt.id ? "checked" : "";
+      container.innerHTML += `
+        <label class="option-item">
+          <input type="radio" name="answer" value="${opt.id}" ${isChecked} onchange="saveAnswer(${q.id}, '${opt.id}')">
+          <div><strong>${opt.id}.</strong> ${opt.text}</div>
+        </label>
+      `;
+    });
+  }
 
   // Atur Navigasi Tombol
-  document.getElementById("prevBtn").disabled = currentQuestionIndex === 0;
+  const prevBtn = document.getElementById("prevBtn");
+  const nextBtn = document.getElementById("nextBtn");
+  const submitBtn = document.getElementById("submitBtn");
+
+  if (prevBtn) prevBtn.disabled = currentQuestionIndex === 0;
+  
   if (currentQuestionIndex === questions.length - 1) {
-    document.getElementById("nextBtn").style.display = "none";
-    document.getElementById("submitBtn").style.display = "block";
+    if (nextBtn) nextBtn.style.display = "none";
+    if (submitBtn) submitBtn.style.display = "block";
   } else {
-    document.getElementById("nextBtn").style.display = "block";
-    document.getElementById("submitBtn").style.display = "none";
+    if (nextBtn) nextBtn.style.display = "block";
+    if (submitBtn) submitBtn.style.display = "none";
   }
 }
 
@@ -86,11 +116,15 @@ function prevQuestion() {
 }
 
 function startTimer() {
+  const timerElem = document.getElementById("timer");
   timerInterval = setInterval(() => {
     timeLeft--;
     const minutes = Math.floor(timeLeft / 60);
     const seconds = timeLeft % 60;
-    document.getElementById("timer").textContent = `Sisa Waktu: ${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+    
+    if (timerElem) {
+      timerElem.textContent = `Sisa Waktu: ${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+    }
 
     if (timeLeft <= 0) {
       clearInterval(timerInterval);
