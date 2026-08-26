@@ -9,7 +9,7 @@
   <style>
     body { background-color: #f8f9fa; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
     .card { border-radius: 12px; border: none; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-    .badge-dimensi { font-size: 0.75rem; margin-right: 4px; margin-bottom: 4px; display: inline-block; }
+    .badge-dimensi { font-size: 0.70rem; margin-right: 3px; margin-bottom: 3px; display: inline-block; }
   </style>
 </head>
 <body>
@@ -41,11 +41,11 @@
     // 3. Batasi hanya untuk Dosen / Admin / Lecturer
     if (userRole !== "dosen" && userRole !== "admin" && userRole !== "lecturer") {
       alert("Akses ditolak! Halaman ini khusus untuk Dosen.");
-      window.location.href = "mahasiswa.html"; // Arahkan kembali jika mahasiswa
+      window.location.href = "mahasiswa.html";
       return;
     }
 
-    // Jika lolos verifikasi, muat data dashboard
+    // Jika lolos verifikasi, muat seluruh data dashboard
     loadAllData();
   });
 </script>
@@ -156,17 +156,80 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
-  // Menggunakan SCRIPT_URL dari CONFIG (sinkron dengan file config.js Anda)
   const SCRIPT_URL = (typeof CONFIG !== "undefined" && CONFIG.API_URL) 
     ? CONFIG.API_URL 
     : "https://script.google.com/macros/s/AKfycbxs-5HAAB20TqkVoDJu1y-en3LLCHJrI0BsFMrN1xS_i4AU3HdLh2kGeudJ0rnD_t68gQ/exec";
 
   function loadAllData() {
+    fetchExamResults();
     fetchViolations();
-    // Tambahkan fungsi pengambilan data hasil ujian lainnya di sini jika diperlukan
   }
 
-  // Fetch Log Pelanggaran
+  // 1. Fetch Hasil Ujian & Analisis Facione
+  function fetchExamResults() {
+    fetch(`${SCRIPT_URL}?action=getResults`)
+      .then(res => res.json())
+      .then(res => {
+        if (res.status === "SUCCESS") {
+          renderExamResults(res.data);
+        } else {
+          console.error("Gagal memuat hasil ujian:", res.message);
+        }
+      })
+      .catch(err => console.error("Error fetching results:", err));
+  }
+
+  function renderExamResults(data) {
+    const tbody = document.getElementById("tableResultsBody");
+    
+    if (!data || data.length === 0) {
+      document.getElementById("totalPeserta").innerText = "0";
+      document.getElementById("avgScore").innerText = "0";
+      tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted py-4">Belum ada peserta yang mengumpulkan ujian.</td></tr>`;
+      return;
+    }
+
+    document.getElementById("totalPeserta").innerText = data.length;
+
+    let totalScore = 0;
+    tbody.innerHTML = data.map(item => {
+      totalScore += Number(item.score || 0);
+
+      // Parsing breakdown dimensi Facione (jika disimpan dalam format JSON string)
+      let dimensionBadges = "-";
+      try {
+        const stats = typeof item.dimensions === "string" ? JSON.parse(item.dimensions) : item.dimensions;
+        if (stats) {
+          dimensionBadges = Object.entries(stats).map(([dim, val]) => {
+            const pct = typeof val === "object" ? val.percentage : val;
+            let badgeColor = "bg-secondary";
+            if (pct >= 75) badgeColor = "bg-success";
+            else if (pct >= 50) badgeColor = "bg-primary";
+            else badgeColor = "bg-warning text-dark";
+
+            return `<span class="badge ${badgeColor} badge-dimensi">${dim}: ${pct}%</span>`;
+          }).join('');
+        }
+      } catch (e) {
+        dimensionBadges = `<small class="text-muted">Format dimensi tidak valid</small>`;
+      }
+
+      return `
+        <tr>
+          <td><small class="text-muted">${item.timestamp ? new Date(item.timestamp).toLocaleString('id-ID') : '-'}</small></td>
+          <td><strong>${item.nim || '-'}</strong></td>
+          <td>${item.nama || '-'}</td>
+          <td><span class="fw-bold text-primary">${item.score || 0}</span></td>
+          <td>${dimensionBadges}</td>
+        </tr>
+      `;
+    }).join('');
+
+    const avg = Math.round(totalScore / data.length);
+    document.getElementById("avgScore").innerText = isNaN(avg) ? "0" : avg;
+  }
+
+  // 2. Fetch Log Pelanggaran
   function fetchViolations() {
     fetch(`${SCRIPT_URL}?action=getViolations`)
       .then(res => res.json())
