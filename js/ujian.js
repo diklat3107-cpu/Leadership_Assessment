@@ -210,3 +210,64 @@ function finishExam() {
     window.location.href = "mahasiswa.html";
   });
 }
+// Variabel untuk melacak pelanggaran kecurangan
+let violationCount = 0;
+const MAX_VIOLATIONS = 3; // Batas maksimal pindah tab sebelum ujian otomatis di-submit
+
+document.addEventListener("DOMContentLoaded", () => {
+  displayUserInfo();
+  fetchQuestions();
+  setupProctoring(); // <--- Inisialisasi pengawasan pindah tab
+});
+
+// Fungsi untuk mendeteksi perpindahan tab/layar
+function setupProctoring() {
+  // Mendeteksi saat pengguna pindah tab atau meminimalkan browser
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) {
+      handleViolation("Pindah Tab / Browser Diminimalkan");
+    }
+  });
+
+  // Mendeteksi saat fokus jendela browser hilang (misal: buka aplikasi lain seperti WA/Notepad)
+  window.addEventListener("blur", () => {
+    handleViolation("Layar Tidak Fokus / Buka Aplikasi Lain");
+  });
+}
+
+// Fungsi penanganan pelanggaran
+function handleViolation(reason) {
+  violationCount++;
+
+  // Kirim laporan pelanggaran ke server Google Apps Script (Panel Dosen)
+  sendViolationToServer(reason);
+
+  if (violationCount >= MAX_VIOLATIONS) {
+    alert(`PERINGATAN KERAS!\nAnda telah berpindah layar sebanyak ${violationCount} kali.\nUjian Anda dihentikan dan jawaban akan otomatis dikirim!`);
+    finishExam(); // Otomatis submit ujian
+  } else {
+    alert(`PERINGATAN KECURANGAN (${violationCount}/${MAX_VIOLATIONS})!\nSistem mendeteksi Anda meninggalkan layar ujian (${reason}). Harap tetap di halaman ujian!`);
+  }
+}
+
+// Kirim data pelanggaran ke backend (Code.gs)
+function sendViolationToServer(reason) {
+  const rawUser = localStorage.getItem("cbt_auth_user") || sessionStorage.getItem("cbt_auth_user");
+  let user = { nama: "Mahasiswa", nim: "-" };
+  if (rawUser) { try { user = JSON.parse(rawUser); } catch(e){} }
+
+  const payload = {
+    action: "logViolation",
+    student: user,
+    violationType: reason,
+    count: violationCount,
+    timestamp: new Date().toISOString()
+  };
+
+  fetch(SCRIPT_URL, {
+    method: "POST",
+    mode: "no-cors",
+    headers: { "Content-Type": "text/plain;charset=utf-8" },
+    body: JSON.stringify(payload)
+  });
+}
