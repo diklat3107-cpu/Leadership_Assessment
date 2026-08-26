@@ -32,7 +32,6 @@
     
     .question-card { background: #ffffff; border-radius: 12px; padding: 32px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
     
-    /* Container untuk Nomor Soal dan Badge Dimensi Facione */
     .question-header-row {
       display: flex;
       align-items: center;
@@ -48,7 +47,6 @@
       font-weight: 700;
     }
 
-    /* Styling Badge Dimensi Facione */
     .facione-badge {
       background-color: #e0e7ff;
       color: #3730a3;
@@ -96,7 +94,6 @@
 
   <div class="exam-container">
     <div class="question-card">
-      <!-- Area Header Soal (Nomor Soal + Badge Dimensi Facione) -->
       <div class="question-header-row">
         <h4 class="question-num" id="questionNum">Soal 1 dari 15</h4>
         <span class="facione-badge" id="facioneDimension" style="display: none;"></span>
@@ -116,6 +113,10 @@
     </div>
   </div>
 
+  <!-- Script Konfigurasi & Logika Ujian -->
+  <script src="./js/config.js"></script>
+  <script src="./js/api.js"></script>
+  <script src="./js/auth.js"></script>
   <script src="./js/ujian.js"></script>
 </body>
 </html>
