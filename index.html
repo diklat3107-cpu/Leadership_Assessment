@@ -127,10 +127,19 @@
         try {
           const response = await API.login(identifier, password);
 
-          // Menyesuaikan dengan standar format sukses Apps Script (status === "SUCCESS")
-          if ((response.success || response.status === "SUCCESS") && response.data) {
-            Auth.saveSession(response.data);
-            Auth.redirectUserByRole(response.data.user.role);
+          // Cek apakah respons sukses (baik membungkus di .data atau langsung di root response)
+          const isSuccess = response && (response.success || response.status === "SUCCESS" || response.token || response.session);
+
+          if (isSuccess) {
+            // Ambil payload data yang valid (fleksibel terhadap format Apps Script)
+            const sessionData = response.data || response;
+            
+            // Simpan sesi menggunakan Auth helper
+            Auth.saveSession(sessionData);
+            
+            // Ambil role pengguna untuk pengalihan halaman
+            const userRole = sessionData.user && sessionData.user.role ? sessionData.user.role : "mahasiswa";
+            Auth.redirectUserByRole(userRole);
           } else {
             setLoading(false);
             showAlert(response.message || "Email/NIM atau password salah.");
