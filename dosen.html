@@ -11,7 +11,31 @@
     .card { border-radius: 12px; border: none; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
     .badge-dimensi { font-size: 0.75rem; margin-right: 4px; margin-bottom: 4px; display: inline-block; }
   </style>
-</head>
+</head><script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const rawUser = localStorage.getItem("cbt_auth_user");
+    const token = localStorage.getItem("cbt_session_token");
+
+    if (!token || !rawUser) {
+      alert("Silakan login terlebih dahulu.");
+      window.location.href = "index.html";
+      return;
+    }
+
+    try {
+      const user = JSON.parse(rawUser);
+      const userRole = (user.role || "").toLowerCase().trim();
+
+      if (userRole !== "dosen" && userRole !== "admin" && userRole !== "lecturer") {
+        alert("Akses ditolak! Halaman ini khusus untuk Dosen.");
+        window.location.href = "mahasiswa.html"; // Kembalikan ke halaman mahasiswa
+      }
+    } catch (e) {
+      localStorage.clear();
+      window.location.href = "index.html";
+    }
+  });
+</script>
 <body>
 
 <div class="container my-4">
