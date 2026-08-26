@@ -11,32 +11,44 @@
     .card { border-radius: 12px; border: none; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
     .badge-dimensi { font-size: 0.75rem; margin-right: 4px; margin-bottom: 4px; display: inline-block; }
   </style>
-</head><script>
-  document.addEventListener("DOMContentLoaded", () => {
-    const rawUser = localStorage.getItem("cbt_auth_user");
-    const token = localStorage.getItem("cbt_session_token");
+</head>
+<body>
 
-    if (!token || !rawUser) {
+<!-- Script Konfigurasi & Autentikasi untuk Validasi Akses Dosen -->
+<script src="./js/config.js"></script>
+<script src="./js/api.js"></script>
+<script src="./js/auth.js"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    // 1. Validasi apakah sesi login aktif menggunakan objek Auth
+    if (typeof Auth !== "undefined" && !Auth.isAuthenticated()) {
       alert("Silakan login terlebih dahulu.");
       window.location.href = "index.html";
       return;
     }
 
-    try {
-      const user = JSON.parse(rawUser);
-      const userRole = (user.role || "").toLowerCase().trim();
-
-      if (userRole !== "dosen" && userRole !== "admin" && userRole !== "lecturer") {
-        alert("Akses ditolak! Halaman ini khusus untuk Dosen.");
-        window.location.href = "mahasiswa.html"; // Kembalikan ke halaman mahasiswa
-      }
-    } catch (e) {
-      localStorage.clear();
+    // 2. Ambil data user yang sedang login
+    const user = Auth.getUser();
+    if (!user || !user.role) {
+      alert("Sesi tidak valid. Silakan login kembali.");
+      Auth.clearSession();
       window.location.href = "index.html";
+      return;
     }
+
+    const userRole = (user.role || "").toLowerCase().trim();
+
+    // 3. Batasi hanya untuk Dosen / Admin / Lecturer
+    if (userRole !== "dosen" && userRole !== "admin" && userRole !== "lecturer") {
+      alert("Akses ditolak! Halaman ini khusus untuk Dosen.");
+      window.location.href = "mahasiswa.html"; // Arahkan kembali jika mahasiswa
+      return;
+    }
+
+    // Jika lolos verifikasi, muat data dashboard
+    loadAllData();
   });
 </script>
-<body>
 
 <div class="container my-4">
   <!-- Header -->
@@ -45,9 +57,14 @@
       <h3 class="fw-bold mb-0">Dashboard Dosen</h3>
       <p class="text-muted mb-0">Pemantauan Hasil Ujian & Analysis Dimensi Critical Thinking (Facione)</p>
     </div>
-    <button class="btn btn-outline-primary btn-sm" onclick="loadAllData()">
-      <i class="fas fa-sync-alt me-1"></i> Refresh Data
-    </button>
+    <div>
+      <button class="btn btn-outline-danger btn-sm me-2" onclick="Auth.logout()">
+        <i class="fas fa-sign-out-alt me-1"></i> Keluar
+      </button>
+      <button class="btn btn-outline-primary btn-sm" onclick="loadAllData()">
+        <i class="fas fa-sync-alt me-1"></i> Refresh Data
+      </button>
+    </div>
   </div>
 
   <!-- Cards Ringkasan -->
@@ -139,17 +156,14 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
-  // GANTI URL INI dengan URL Web App Google Apps Script Anda yang sudah dideploy
-  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxs-5HAAB20TqkVoDJu1y-en3LLCHJrI0BsFMrN1xS_i4AU3HdLh2kGeudJ0rnD_t68gQ/exec";
-
-  document.addEventListener("DOMContentLoaded", () => {
-    loadAllData();
-  });
+  // Menggunakan SCRIPT_URL dari CONFIG (sinkron dengan file config.js Anda)
+  const SCRIPT_URL = (typeof CONFIG !== "undefined" && CONFIG.API_URL) 
+    ? CONFIG.API_URL 
+    : "https://script.google.com/macros/s/AKfycbxs-5HAAB20TqkVoDJu1y-en3LLCHJrI0BsFMrN1xS_i4AU3HdLh2kGeudJ0rnD_t68gQ/exec";
 
   function loadAllData() {
     fetchViolations();
-    // Tambahkan fetching hasil ujian jika menggunakan endpoint tersendiri,
-    // atau gunakan fungsi pemanggil Google Apps Script bawaan.
+    // Tambahkan fungsi pengambilan data hasil ujian lainnya di sini jika diperlukan
   }
 
   // Fetch Log Pelanggaran
@@ -163,25 +177,27 @@
           console.error("Gagal memuat pelanggaran:", res.message);
         }
       })
-      .catch(err => console.error("Error:", err));
+      .catch(err => console.error("Error fetching violations:", err));
   }
 
   function renderViolations(data) {
     const tbody = document.getElementById("tableViolationsBody");
-    document.getElementById("totalViolations").innerText = data.length;
-
+    
     if (!data || data.length === 0) {
+      document.getElementById("totalViolations").innerText = "0";
       tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted py-4">Belum ada catatan pelanggaran.</td></tr>`;
       return;
     }
 
+    document.getElementById("totalViolations").innerText = data.length;
+
     tbody.innerHTML = data.map(v => `
       <tr>
-        <td><small class="text-muted">${new Date(v.timestamp).toLocaleString('id-ID')}</small></td>
-        <td><strong>${v.nim}</strong></td>
-        <td>${v.nama}</td>
-        <td><span class="badge bg-warning text-dark">${v.type}</span></td>
-        <td><span class="badge bg-danger">${v.count} Kali</span></td>
+        <td><small class="text-muted">${v.timestamp ? new Date(v.timestamp).toLocaleString('id-ID') : '-'}</small></td>
+        <td><strong>${v.nim || '-'}</strong></td>
+        <td>${v.nama || '-'}</td>
+        <td><span class="badge bg-warning text-dark">${v.type || 'Pindah Tab'}</span></td>
+        <td><span class="badge bg-danger">${v.count || 1} Kali</span></td>
       </tr>
     `).join('');
   }
