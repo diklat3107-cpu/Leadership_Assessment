@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Login - Critical Thinking Assessment UNIMED</title>
-  <!-- Menghubungkan CSS (Gunakan ./ agar terbaca dari root) -->
+  <!-- Menghubungkan CSS -->
   <link rel="stylesheet" href="./css/style.css">
   <link rel="stylesheet" href="./css/responsive.css">
 </head>
@@ -36,20 +36,20 @@
     <div class="login-form-container">
       <div class="login-header">
         <h2>Selamat Datang</h2>
-        <p>Silakan login menggunakan NIM atau Email Anda</p>
+        <p>Silakan login menggunakan NIM, Email, atau NIP Anda</p>
       </div>
 
       <!-- Alert Pesan Error -->
-      <div id="alertBox" class="alert alert-danger" role="alert"></div>
+      <div id="alertBox" class="alert alert-danger" role="alert" style="display: none;"></div>
 
       <form id="loginForm" autocomplete="off">
         <div class="form-group">
-          <label for="identifier">NIM / Email</label>
+          <label for="identifier">NIM / Email / NIP</label>
           <input 
             type="text" 
             id="identifier" 
             class="form-input" 
-            placeholder="Masukkan NIM atau Email" 
+            placeholder="Masukkan NIM, Email atau NIP" 
             required 
             autofocus
           >
@@ -84,6 +84,7 @@
   
   <script>
     document.addEventListener("DOMContentLoaded", () => {
+      // Cek apakah sudah login sebelumnya
       if (typeof Auth !== "undefined" && Auth.isAuthenticated()) {
         const user = Auth.getUser();
         if (user && user.role) {
@@ -117,20 +118,27 @@
         const password = passwordInput.value;
 
         if (!identifier || !password) {
-          showAlert("NIM/Email dan Password wajib diisi.");
+          showAlert("NIM/Email/NIP dan Password wajib diisi.");
           return;
         }
 
         setLoading(true);
 
-        const response = await API.login(identifier, password);
+        try {
+          const response = await API.login(identifier, password);
 
-        if (response.success && response.data) {
-          Auth.saveSession(response.data);
-          Auth.redirectUserByRole(response.data.user.role);
-        } else {
+          // Menyesuaikan dengan standar format sukses Apps Script (status === "SUCCESS")
+          if ((response.success || response.status === "SUCCESS") && response.data) {
+            Auth.saveSession(response.data);
+            Auth.redirectUserByRole(response.data.user.role);
+          } else {
+            setLoading(false);
+            showAlert(response.message || "Email/NIM atau password salah.");
+          }
+        } catch (err) {
           setLoading(false);
-          showAlert(response.message || "Email/NIM atau password salah.");
+          showAlert("Terjadi kesalahan koneksi ke server.");
+          console.error(err);
         }
       });
 
