@@ -5,7 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dashboard Mahasiswa - CBT UNIMED</title>
   <link rel="stylesheet" href="./css/style.css">
-  <link rel="stylesheet" href="./css/responsive.css">
+  <!-- Hapus atau buat file responsive.css jika belum ada untuk mencegah error 404 -->
+  <!-- <link rel="stylesheet" href="./css/responsive.css"> -->
+  
   <!-- Chart.js CDN untuk Visualisasi Grafik Dimensi Facione -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
@@ -14,15 +16,18 @@
     body {
       display: block;
       background-color: #f1f5f9;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 0;
     }
     .navbar {
-      background-color: var(--surface);
-      border-bottom: 1px solid var(--border);
+      background-color: #ffffff;
+      border-bottom: 1px solid #e2e8f0;
       padding: 16px 32px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      box-shadow: var(--shadow-sm);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
     }
     .nav-brand {
       display: flex;
@@ -35,7 +40,8 @@
     }
     .nav-brand h2 {
       font-size: 16px;
-      color: var(--primary);
+      color: #2563eb;
+      margin: 0;
     }
     .nav-user {
       display: flex;
@@ -48,19 +54,21 @@
     .user-name {
       font-weight: 700;
       font-size: 14px;
+      color: #0f172a;
     }
     .user-role {
       font-size: 12px;
-      color: var(--text-muted);
+      color: #64748b;
     }
     .btn-logout {
       background-color: #fee2e2;
-      color: var(--danger);
+      color: #dc2626;
       border: none;
       padding: 8px 16px;
-      border-radius: var(--radius-sm);
+      border-radius: 6px;
       font-weight: 600;
       cursor: pointer;
+      transition: background 0.2s;
     }
     .btn-logout:hover {
       background-color: #fca5a5;
@@ -71,74 +79,32 @@
       padding: 0 20px;
     }
     .welcome-card {
-      background: linear-gradient(135deg, var(--primary) 0%, #1e40af 100%);
+      background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
       color: white;
       padding: 24px 32px;
-      border-radius: var(--radius-lg);
+      border-radius: 12px;
       margin-bottom: 24px;
-      box-shadow: var(--shadow-md);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
     }
     .welcome-card h1 {
       font-size: 22px;
+      margin-top: 0;
       margin-bottom: 8px;
     }
     .welcome-card p {
       color: #cbd5e1;
       font-size: 14px;
+      margin: 0;
     }
-    .exam-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
-      padding: 24px;
-      box-shadow: var(--shadow-sm);
-      margin-bottom: 24px;
-    }
-    .exam-card-header {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 12px;
-    }
-    .badge {
-      font-size: 11px;
-      font-weight: 700;
-      padding: 4px 10px;
-      border-radius: 20px;
-    }
-    .badge-primary { background: #e0e7ff; color: #3730a3; }
-    .badge-success { background: #dcfce7; color: #166534; }
-    .exam-title {
-      font-size: 18px;
-      margin-bottom: 8px;
-    }
-    .exam-desc {
-      color: var(--text-muted);
-      font-size: 14px;
-      margin-bottom: 16px;
-    }
-    .exam-meta {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 12px;
-      padding: 16px;
-      background: #f8fafc;
-      border-radius: var(--radius-md);
-      margin-bottom: 20px;
-      font-size: 13px;
-    }
-    .exam-action {
-      display: flex;
-      justify-content: flex-end;
-    }
-
+    
     /* Styling Card Hasil Analisis Facione */
     .result-card {
       background: #ffffff;
       border: 1px solid #e2e8f0;
-      border-radius: var(--radius-lg);
+      border-radius: 12px;
       padding: 28px;
       margin-bottom: 28px;
-      box-shadow: var(--shadow-sm);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
     }
     .result-header {
       display: flex;
@@ -147,6 +113,8 @@
       border-bottom: 1px solid #f1f5f9;
       padding-bottom: 16px;
       margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 12px;
     }
     .score-box {
       background: #eff6ff;
@@ -176,10 +144,10 @@
   <!-- Navbar Navigation -->
   <nav class="navbar">
     <div class="nav-brand">
-      <img src="./assets/logo_unimed.png" alt="Logo UNIMED">
+      <img src="./assets/logo_unimed.png" alt="Logo UNIMED" onerror="this.style.display='none'">
       <div>
         <h2>CBT UNIMED</h2>
-        <span style="font-size: 11px; color: var(--text-muted);">Assessment Berpikir Kritis</span>
+        <span style="font-size: 11px; color: #64748b;">Assessment Berpikir Kritis</span>
       </div>
     </div>
     <div class="nav-user">
@@ -187,7 +155,8 @@
         <div id="userName" class="user-name">Loading...</div>
         <div id="userNim" class="user-role">-</div>
       </div>
-      <button id="logoutBtn" class="btn-logout">Keluar</button>
+      <!-- Tombol Keluar dengan Event Handler Auth.logout() -->
+      <button id="logoutBtn" class="btn-logout" onclick="handleLogout()">Keluar</button>
     </div>
   </nav>
 
@@ -235,5 +204,19 @@
   <script src="./js/api.js"></script>
   <script src="./js/auth.js"></script>
   <script src="./js/mahasiswa.js"></script>
+
+  <script>
+    // Fungsi pengaman untuk menangani tombol keluar
+    function handleLogout() {
+      if (typeof Auth !== 'undefined' && typeof Auth.logout === 'function') {
+        Auth.logout();
+      } else {
+        // Fallback jika Auth belum termuat
+        localStorage.clear();
+        sessionStorage.clear();
+        window.location.href = "index.html";
+      }
+    }
+  </script>
 </body>
 </html>
