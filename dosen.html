@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel Dosen - Pemantauan Ujian & Facione Analysis</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <style>
+    body { background-color: #f8f9fa; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    .card { border-radius: 12px; border: none; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+    .badge-dimensi { font-size: 0.75rem; margin-right: 4px; margin-bottom: 4px; display: inline-block; }
+  </style>
+</head>
+<body>
+
+<div class="container my-4">
+  <!-- Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h3 class="fw-bold mb-0">Dashboard Dosen</h3>
+      <p class="text-muted mb-0">Pemantauan Hasil Ujian & Analysis Dimensi Critical Thinking (Facione)</p>
+    </div>
+    <button class="btn btn-outline-primary btn-sm" onclick="loadAllData()">
+      <i class="fas fa-sync-alt me-1"></i> Refresh Data
+    </button>
+  </div>
+
+  <!-- Cards Ringkasan -->
+  <div class="row g-3 mb-4">
+    <div class="col-md-4">
+      <div class="card p-3 bg-white border-start border-4 border-primary">
+        <div class="text-muted small">Total Peserta Ujian</div>
+        <div class="h3 fw-bold mb-0" id="totalPeserta">0</div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card p-3 bg-white border-start border-4 border-success">
+        <div class="text-muted small">Rata-Rata Nilai</div>
+        <div class="h3 fw-bold mb-0" id="avgScore">0</div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card p-3 bg-white border-start border-4 border-danger">
+        <div class="text-muted small">Total Indikasi Pelanggaran</div>
+        <div class="h3 fw-bold mb-0" id="totalViolations">0</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Nav Tabs -->
+  <ul class="nav nav-tabs mb-3" id="dosenTab" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button class="nav-link active" id="results-tab" data-bs-toggle="tab" data-bs-target="#results" type="button">
+        <i class="fas fa-poll me-1"></i> Hasil Ujian & Analisis Facione
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link text-danger" id="violations-tab" data-bs-toggle="tab" data-bs-target="#violations" type="button">
+        <i class="fas fa-exclamation-triangle me-1"></i> Log Pelanggaran (Pindah Tab)
+      </button>
+    </li>
+  </ul>
+
+  <!-- Tab Contents -->
+  <div class="tab-content" id="dosenTabContent">
+    
+    <!-- Tab 1: Hasil Ujian -->
+    <div class="tab-pane fade show active" id="results" role="tabpanel">
+      <div class="card p-3">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>Waktu</th>
+                <th>NIM</th>
+                <th>Nama Mahasiswa</th>
+                <th>Nilai Akhir</th>
+                <th>Penguasaan Dimensi Facione</th>
+              </tr>
+            </thead>
+            <tbody id="tableResultsBody">
+              <tr><td colspan="5" class="text-center text-muted">Memuat data...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab 2: Log Pelanggaran -->
+    <div class="tab-pane fade" id="violations" role="tabpanel">
+      <div class="card p-3">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>Waktu</th>
+                <th>NIM</th>
+                <th>Nama Mahasiswa</th>
+                <th>Jenis Pelanggaran</th>
+                <th>Jumlah Terdeteksi</th>
+              </tr>
+            </thead>
+            <tbody id="tableViolationsBody">
+              <tr><td colspan="5" class="text-center text-muted">Memuat data kecurangan...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+  // GANTI URL INI dengan URL Web App Google Apps Script Anda yang sudah dideploy
+  const SCRIPT_URL = "URL_WEB_APP_ANDA_DI_SINI";
+
+  document.addEventListener("DOMContentLoaded", () => {
+    loadAllData();
+  });
+
+  function loadAllData() {
+    fetchViolations();
+    // Tambahkan fetching hasil ujian jika menggunakan endpoint tersendiri,
+    // atau gunakan fungsi pemanggil Google Apps Script bawaan.
+  }
+
+  // Fetch Log Pelanggaran
+  function fetchViolations() {
+    fetch(`${SCRIPT_URL}?action=getViolations`)
+      .then(res => res.json())
+      .then(res => {
+        if (res.status === "SUCCESS") {
+          renderViolations(res.data);
+        } else {
+          console.error("Gagal memuat pelanggaran:", res.message);
+        }
+      })
+      .catch(err => console.error("Error:", err));
+  }
+
+  function renderViolations(data) {
+    const tbody = document.getElementById("tableViolationsBody");
+    document.getElementById("totalViolations").innerText = data.length;
+
+    if (!data || data.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted py-4">Belum ada catatan pelanggaran.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = data.map(v => `
+      <tr>
+        <td><small class="text-muted">${new Date(v.timestamp).toLocaleString('id-ID')}</small></td>
+        <td><strong>${v.nim}</strong></td>
+        <td>${v.nama}</td>
+        <td><span class="badge bg-warning text-dark">${v.type}</span></td>
+        <td><span class="badge bg-danger">${v.count} Kali</span></td>
+      </tr>
+    `).join('');
+  }
+</script>
+
+</body>
+</html>
