@@ -171,6 +171,7 @@
       .then(res => res.json())
       .then(res => {
         if (res.status === "SUCCESS") {
+          console.log("Hasil ujian berhasil dimuat:", res.message);
           renderExamResults(res.data);
         } else {
           console.error("Gagal memuat hasil ujian:", res.message);
@@ -195,7 +196,6 @@
     tbody.innerHTML = data.map(item => {
       totalScore += Number(item.score || 0);
 
-      // Parsing breakdown dimensi Facione (jika disimpan dalam format JSON string)
       let dimensionBadges = "-";
       try {
         const stats = typeof item.dimensions === "string" ? JSON.parse(item.dimensions) : item.dimensions;
@@ -235,6 +235,7 @@
       .then(res => res.json())
       .then(res => {
         if (res.status === "SUCCESS") {
+          console.log("Data pelanggaran berhasil dimuat:", res.message);
           renderViolations(res.data);
         } else {
           console.error("Gagal memuat pelanggaran:", res.message);
