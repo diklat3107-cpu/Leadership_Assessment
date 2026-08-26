@@ -7,8 +7,8 @@ const Auth = {
     localStorage.setItem(CONFIG.STORAGE_KEYS.EXPIRES_AT, session.expires_at);
   },
 
-  getToken() { 
-    return localStorage.getItem(CONFIG.STORAGE_KEYS.TOKEN); 
+  getToken() {  
+    return localStorage.getItem(CONFIG.STORAGE_KEYS.TOKEN);  
   },
 
   getUser() {
@@ -55,6 +55,8 @@ const Auth = {
       }
     }
     this.clearSession();
-    window.location.href = CONFIG.ROUTES && CONFIG.ROUTES.LOGIN ? CONFIG.ROUTES.LOGIN : "index.html";
+    
+    // Diperbaiki: Langsung arahkan ke "index.html" sebagai halaman utama login
+    window.location.href = "index.html";
   }
 };
