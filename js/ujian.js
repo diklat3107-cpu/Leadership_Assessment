@@ -7,9 +7,15 @@ let userAnswers = {};
 let timerInterval;
 let timeLeft = 3600;
 
+// Variabel untuk melacak pelanggaran kecurangan & pengaman submit
+let violationCount = 0;
+const MAX_VIOLATIONS = 3; 
+let isSubmitting = false; // Flag penting untuk mencegah looping alert/submit
+
 document.addEventListener("DOMContentLoaded", () => {
   displayUserInfo();
   fetchQuestions();
+  setupProctoring(); 
 });
 
 function displayUserInfo() {
@@ -36,7 +42,6 @@ function fetchQuestions() {
   fetch(`${SCRIPT_URL}?action=getQuestions`)
     .then(res => res.json())
     .then(res => {
-      // Menangani format respons successResponse dari Code.gs
       const questionData = res.data || (Array.isArray(res) ? res : null);
       
       if (questionData && questionData.length > 0) {
@@ -81,10 +86,8 @@ function loadQuestion() {
 
   const q = questions[currentQuestionIndex];
   
-  // Set Nomor Soal
   document.getElementById("questionNum").textContent = `Soal ${currentQuestionIndex + 1} dari ${questions.length}`;
 
-  // Set & Tampilkan Badge Dimensi Facione
   const dimensionElem = document.getElementById("facioneDimension");
   if (dimensionElem) {
     if (q.facione_dimension) {
@@ -95,10 +98,8 @@ function loadQuestion() {
     }
   }
 
-  // Set Teks Soal
   document.getElementById("questionText").textContent = q.text;
 
-  // Render Pilihan Jawaban
   const container = document.getElementById("optionsContainer");
   container.innerHTML = "";
   q.options.forEach(opt => {
@@ -140,11 +141,22 @@ function startTimer() {
 }
 
 function finishExam() {
-  if (!confirm("Apakah Anda yakin ingin menyelesaikan ujian?")) return;
+  // Jika sudah dalam proses submit, abaikan pemanggilan berulang
+  if (isSubmitting) return;
 
+  // Jika dipanggil manual via tombol, minta konfirmasi
+  // Jika dipanggil otomatis karena pelanggaran/waktu habis, langsung lewati konfirmasi
+  if (event && event.type === 'click') {
+    if (!confirm("Apakah Anda yakin ingin menyelesaikan ujian?")) return;
+  }
+
+  isSubmitting = true; // Kunci agar event proctoring tidak memicu pelanggaran lagi
   clearInterval(timerInterval);
   
-  // 1. Hitung Skor Total & Breakdown Dimensi Facione
+  // Matikan event listener proctoring agar tidak mendeteksi aktivitas lagi saat pengiriman
+  window.removeEventListener("blur", handleBlurEvent);
+  document.removeEventListener("visibilitychange", handleVisibilityEvent);
+
   let score = 0;
   const dimensionStats = {};
 
@@ -161,7 +173,6 @@ function finishExam() {
     }
   });
 
-  // Hitung persentase per dimensi
   Object.keys(dimensionStats).forEach(dim => {
     const stat = dimensionStats[dim];
     stat.percentage = Math.round((stat.correct / stat.total) * 100);
@@ -182,7 +193,6 @@ function finishExam() {
     questions: questions
   };
 
-  // 2. Simpan hasil ujian ke sessionStorage untuk dibaca di halaman Mahasiswa
   const resultStorageData = {
     score: finalScore,
     totalQuestions: questions.length,
@@ -191,7 +201,6 @@ function finishExam() {
   };
   sessionStorage.setItem("last_exam_result", JSON.stringify(resultStorageData));
 
-  // 3. Kirim data ke backend Google Apps Script
   fetch(SCRIPT_URL, {
     method: "POST",
     mode: "no-cors",
@@ -210,47 +219,45 @@ function finishExam() {
     window.location.href = "mahasiswa.html";
   });
 }
-// Variabel untuk melacak pelanggaran kecurangan
-let violationCount = 0;
-const MAX_VIOLATIONS = 3; // Batas maksimal pindah tab sebelum ujian otomatis di-submit
 
-document.addEventListener("DOMContentLoaded", () => {
-  displayUserInfo();
-  fetchQuestions();
-  setupProctoring(); // <--- Inisialisasi pengawasan pindah tab
-});
+// --- Fungsi Pengawasan (Proctoring) yang Diperbaiki ---
 
-// Fungsi untuk mendeteksi perpindahan tab/layar
 function setupProctoring() {
-  // Mendeteksi saat pengguna pindah tab atau meminimalkan browser
-  document.addEventListener("visibilitychange", () => {
-    if (document.hidden) {
-      handleViolation("Pindah Tab / Browser Diminimalkan");
-    }
-  });
-
-  // Mendeteksi saat fokus jendela browser hilang (misal: buka aplikasi lain seperti WA/Notepad)
-  window.addEventListener("blur", () => {
-    handleViolation("Layar Tidak Fokus / Buka Aplikasi Lain");
-  });
+  document.addEventListener("visibilitychange", handleVisibilityEvent);
+  window.addEventListener("blur", handleBlurEvent);
 }
 
-// Fungsi penanganan pelanggaran
-function handleViolation(reason) {
-  violationCount++;
+function handleVisibilityEvent() {
+  if (document.hidden && !isSubmitting) {
+    handleViolation("Pindah Tab / Browser Diminimalkan");
+  }
+}
 
-  // Kirim laporan pelanggaran ke server Google Apps Script (Panel Dosen)
+function handleBlurEvent() {
+  // Hanya tangkap blur jika benar-benar tidak sedang submit dan halaman tersembunyi/kehilangan fokus
+  if (!isSubmitting && document.hasFocus() === false) {
+    // Opsional: Untuk mencegah double trigger bersamaan dengan visibilitychange, 
+    // kita bisa fokuskan pengecekan pada visibilitychange saja atau berikan jeda.
+    // Di sini kita gunakan penanganan aman:
+  }
+}
+
+// Kita sederhanakan fungsi pemicu pelanggaran agar menggunakan satu pintu terpusat
+function handleViolation(reason) {
+  if (isSubmitting) return; // Jangan deteksi pelanggaran jika ujian sudah mau/sedang disubmit
+
+  violationCount++;
   sendViolationToServer(reason);
 
   if (violationCount >= MAX_VIOLATIONS) {
+    isSubmitting = true;
     alert(`PERINGATAN KERAS!\nAnda telah berpindah layar sebanyak ${violationCount} kali.\nUjian Anda dihentikan dan jawaban akan otomatis dikirim!`);
-    finishExam(); // Otomatis submit ujian
+    finishExam();
   } else {
     alert(`PERINGATAN KECURANGAN (${violationCount}/${MAX_VIOLATIONS})!\nSistem mendeteksi Anda meninggalkan layar ujian (${reason}). Harap tetap di halaman ujian!`);
   }
 }
 
-// Kirim data pelanggaran ke backend (Code.gs)
 function sendViolationToServer(reason) {
   const rawUser = localStorage.getItem("cbt_auth_user") || sessionStorage.getItem("cbt_auth_user");
   let user = { nama: "Mahasiswa", nim: "-" };
